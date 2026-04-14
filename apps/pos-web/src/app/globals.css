@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prevent text selection on POS touchscreen accidental long-presses */
+.pos-no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth scrolling for product grid */
+.pos-grid-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}

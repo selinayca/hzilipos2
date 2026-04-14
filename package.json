@@ -1,0 +1,22 @@
+{
+  "name": "hizlipos",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.4.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "db:migrate": "pnpm --filter @hizlipos/backend migration:run",
+    "db:migrate:revert": "pnpm --filter @hizlipos/backend migration:revert",
+    "db:seed": "pnpm --filter @hizlipos/backend seed:run",
+    "db:generate": "pnpm --filter @hizlipos/backend migration:generate"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0"
+  }
+}
