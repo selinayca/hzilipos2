@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api';
 import { X } from 'lucide-react';
+import { useT } from '@/lib/i18n/context';
 
 const schema = z.object({
   name: z.string().min(1, 'Required').max(255),
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function ProductForm({ product, onClose, onSaved }: Props) {
+  const { t } = useT();
   const isEdit = !!product;
 
   const {
@@ -59,7 +61,7 @@ export function ProductForm({ product, onClose, onSaved }: Props) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold">{isEdit ? 'Edit Product' : 'New Product'}</h2>
+          <h2 className="text-lg font-bold">{isEdit ? t.product_form_edit : t.product_form_new}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={20} /></button>
         </div>
 
@@ -70,44 +72,44 @@ export function ProductForm({ product, onClose, onSaved }: Props) {
         >
           {mutation.isError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {(mutation.error as any)?.response?.data?.message ?? 'Save failed'}
+              {(mutation.error as any)?.response?.data?.message ?? t.product_form_save_error}
             </div>
           )}
 
-          <Field label="Name *" error={errors.name?.message}>
+          <Field label={t.product_form_field_name} error={errors.name?.message}>
             <input {...register('name')} className={inputCls(!!errors.name)} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Barcode" error={errors.barcode?.message}>
+            <Field label={t.product_form_field_barcode} error={errors.barcode?.message}>
               <input {...register('barcode')} className={inputCls(!!errors.barcode)} />
             </Field>
-            <Field label="SKU" error={errors.sku?.message}>
+            <Field label={t.product_form_field_sku} error={errors.sku?.message}>
               <input {...register('sku')} className={inputCls(!!errors.sku)} />
             </Field>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Price (kuruş) *" error={errors.priceCents?.message}>
+            <Field label={t.product_form_field_price} error={errors.priceCents?.message}>
               <input
                 type="number"
                 {...register('priceCents', { valueAsNumber: true })}
                 className={inputCls(!!errors.priceCents)}
-                placeholder="e.g. 1500 = ₺15.00"
+                placeholder={t.product_form_field_price_hint}
               />
             </Field>
-            <Field label="Tax rate (bps)" error={errors.taxRateBps?.message}>
+            <Field label={t.product_form_field_tax} error={errors.taxRateBps?.message}>
               <input
                 type="number"
                 {...register('taxRateBps', { valueAsNumber: true })}
                 className={inputCls(!!errors.taxRateBps)}
-                placeholder="1800 = 18%"
+                placeholder={t.product_form_field_tax_hint}
               />
             </Field>
           </div>
 
           {!isEdit && (
-            <Field label="Initial Stock" error={errors.initialStock?.message}>
+            <Field label={t.product_form_field_initial_stock} error={errors.initialStock?.message}>
               <input
                 type="number"
                 {...register('initialStock', { valueAsNumber: true })}
@@ -119,22 +121,22 @@ export function ProductForm({ product, onClose, onSaved }: Props) {
           <div className="flex gap-6">
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" {...register('isActive')} className="rounded" />
-              Active
+              {t.active}
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" {...register('trackStock')} className="rounded" />
-              Track stock
+              {t.product_form_field_track_stock}
             </label>
           </div>
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-700 hover:bg-gray-50">
-              Cancel
+              {t.cancel}
             </button>
             <button type="submit" disabled={isSubmitting}
               className="flex-[2] py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 disabled:opacity-50">
-              {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Product'}
+              {isSubmitting ? t.saving : isEdit ? t.product_form_save_btn : t.product_form_create_btn}
             </button>
           </div>
         </form>

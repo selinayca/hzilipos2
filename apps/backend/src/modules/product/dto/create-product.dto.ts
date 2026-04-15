@@ -4,6 +4,7 @@ import {
   IsInt,
   IsBoolean,
   IsUUID,
+  IsArray,
   Min,
   MaxLength,
   MinLength,
@@ -70,4 +71,19 @@ export class CreateProductDto {
   @IsInt()
   @Min(0)
   initialStock?: number;
+
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) priceCents2?: number;
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) priceCents3?: number;
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) priceCents4?: number;
+  @ApiPropertyOptional() @IsOptional() @IsInt() @Min(0) purchasePriceCents?: number;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() unitId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() stockGroupId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() shelfId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) manufacturerName?: string;
+  @ApiPropertyOptional({ type: [String] }) @IsOptional() @IsArray() extraBarcodes?: string[];
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) customField1?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) customField2?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) customField3?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) customField4?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(255) customField5?: string;
 }

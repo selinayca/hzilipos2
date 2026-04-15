@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 import { ProductForm } from '@/components/products/ProductForm';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react';
+import { useT } from '@/lib/i18n/context';
 
 interface Product {
   id: string;
@@ -32,6 +33,7 @@ async function fetchProducts(search: string, page: number): Promise<ProductPage>
 }
 
 export default function ProductsPage() {
+  const { t } = useT();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -54,13 +56,13 @@ export default function ProductsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Products</h1>
+        <h1 className="text-2xl font-bold">{t.products_title}</h1>
         <button
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus size={16} />
-          Add Product
+          {t.products_add}
         </button>
       </div>
 
@@ -71,7 +73,7 @@ export default function ProductsPage() {
           type="search"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search by name or barcode..."
+          placeholder={t.products_search}
           className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -81,7 +83,7 @@ export default function ProductsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              {['Name', 'Barcode', 'Category', 'Price', 'Stock', 'Status', ''].map((h) => (
+              {[t.products_col_name, t.products_col_barcode, t.products_col_category, t.products_col_price, t.products_col_stock, t.products_col_status, ''].map((h) => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {h}
                 </th>
@@ -91,7 +93,7 @@ export default function ProductsPage() {
           <tbody className="divide-y divide-gray-100">
             {isLoading && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">Loading...</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-400">{t.loading}</td>
               </tr>
             )}
             {data?.items.map((p) => (
@@ -103,7 +105,7 @@ export default function ProductsPage() {
                 <td className="px-4 py-3 text-gray-600">{p.stock?.quantity ?? '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {p.isActive ? 'Active' : 'Inactive'}
+                    {p.isActive ? t.active : t.inactive}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -112,7 +114,7 @@ export default function ProductsPage() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => { if (confirm('Delete this product?')) deleteMutation.mutate(p.id); }}
+                      onClick={() => { if (confirm(t.confirm_delete)) deleteMutation.mutate(p.id); }}
                       className="text-gray-400 hover:text-red-600"
                     >
                       <Trash2 size={14} />
@@ -128,11 +130,11 @@ export default function ProductsPage() {
         {data && data.pages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
-              {data.total} products, page {data.page} of {data.pages}
+              {t.items_total(data.total, t.nav_products.toLowerCase())}, {t.page_of(data.page, data.pages)}
             </p>
             <div className="flex gap-1">
-              <PageBtn onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} label="Prev" />
-              <PageBtn onClick={() => setPage((p) => Math.min(data.pages, p + 1))} disabled={page === data.pages} label="Next" />
+              <PageBtn onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} label={t.prev} />
+              <PageBtn onClick={() => setPage((p) => Math.min(data.pages, p + 1))} disabled={page === data.pages} label={t.next} />
             </div>
           </div>
         )}

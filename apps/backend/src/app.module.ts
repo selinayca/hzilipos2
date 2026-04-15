@@ -16,6 +16,19 @@ import { OrderModule } from './modules/order/order.module';
 import { StockModule } from './modules/stock/stock.module';
 import { UserModule } from './modules/user/user.module';
 import { HealthModule } from './modules/health/health.module';
+import { VatRateModule } from './modules/definitions/vat-rate/vat-rate.module';
+import { UnitModule } from './modules/definitions/unit/unit.module';
+import { StockGroupModule } from './modules/definitions/stock-group/stock-group.module';
+import { ShelfModule } from './modules/definitions/shelf/shelf.module';
+import { WarehouseModule } from './modules/definitions/warehouse/warehouse.module';
+import { ColorModule } from './modules/definitions/color/color.module';
+import { SizeModule } from './modules/definitions/size/size.module';
+import { CashRegisterModule } from './modules/definitions/cash-register/cash-register.module';
+import { PaymentTypeModule } from './modules/definitions/payment-type/payment-type.module';
+import { StockMovementModule } from './modules/stock-movement/stock-movement.module';
+import { PriceChangeModule } from './modules/price-change/price-change.module';
+import { ShortcutGroupModule } from './modules/shortcut-group/shortcut-group.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -50,6 +63,23 @@ import { HealthModule } from './modules/health/health.module';
     OrderModule,
     StockModule,
     UserModule,
+
+    // ── Definition modules ────────────────────────────────────────────────
+    VatRateModule,
+    UnitModule,
+    StockGroupModule,
+    ShelfModule,
+    WarehouseModule,
+    ColorModule,
+    SizeModule,
+    CashRegisterModule,
+    PaymentTypeModule,
+
+    // ── Operational modules ───────────────────────────────────────────────
+    StockMovementModule,
+    PriceChangeModule,
+    ShortcutGroupModule,
+    ReportsModule,
   ],
 })
 export class AppModule implements NestModule {

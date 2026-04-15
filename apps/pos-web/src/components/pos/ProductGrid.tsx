@@ -2,33 +2,57 @@
 
 import { useState, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, LocalProduct, LocalCategory } from '@/lib/db';
+import { db, LocalProduct, LocalCategory, LocalShortcutGroup, LocalShortcutGroupItem } from '@/lib/db';
 import { useCartStore } from '@/store/cart.store';
 import { formatCents } from '@/lib/format';
 import { clsx } from 'clsx';
+import { Zap, Search } from 'lucide-react';
+
+type ViewMode = 'browse' | 'shortcuts';
 
 export function ProductGrid() {
+  const [viewMode, setViewMode] = useState<ViewMode>('browse');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [search, setSearch] = useState('');
 
   const addItem = useCartStore((s) => s.addItem);
 
-  // Reactive queries from IndexedDB — updates automatically when data changes
   const categories = useLiveQuery<LocalCategory[]>(
     () => db.categories.orderBy('sortOrder').toArray(),
     [],
   );
 
   const products = useLiveQuery<LocalProduct[]>(
-    () => {
-      let q = db.products.where('isActive').equals(1 as any); // Dexie bool index
-      return q.toArray();
-    },
+    () => db.products.where('isActive').equals(1 as any).toArray(),
     [],
   );
 
+  const shortcutGroups = useLiveQuery<LocalShortcutGroup[]>(
+    () => db.shortcutGroups.orderBy('sortOrder').toArray(),
+    [],
+  );
+
+  const shortcutGroupItems = useLiveQuery<LocalShortcutGroupItem[]>(
+    () => db.shortcutGroupItems.toArray(),
+    [],
+  );
+
+  // Auto-show shortcuts tab when groups exist
+  const hasShortcuts = (shortcutGroups?.length ?? 0) > 0;
+
   const filtered = useMemo(() => {
     if (!products) return [];
+
+    if (viewMode === 'shortcuts' && selectedGroup) {
+      const groupItemIds = (shortcutGroupItems ?? [])
+        .filter((i) => i.shortcutGroupId === selectedGroup)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((i) => i.productId);
+      const productMap = new Map(products.map((p) => [p.id, p]));
+      return groupItemIds.map((id) => productMap.get(id)).filter(Boolean) as LocalProduct[];
+    }
+
     let result = products;
 
     if (selectedCategory) {
@@ -45,23 +69,96 @@ export function ProductGrid() {
     }
 
     return result;
-  }, [products, selectedCategory, search]);
+  }, [products, selectedCategory, search, viewMode, selectedGroup, shortcutGroupItems]);
+
+  // When switching to shortcuts mode, auto-select first group
+  function enterShortcutsMode() {
+    setViewMode('shortcuts');
+    if (!selectedGroup && shortcutGroups?.[0]) {
+      setSelectedGroup(shortcutGroups[0].id);
+    }
+  }
+
+  function enterBrowseMode() {
+    setViewMode('browse');
+    setSelectedGroup(null);
+  }
 
   return (
     <div className="flex flex-col h-full gap-3 pos-no-select">
-      {/* Search bar */}
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search or scan barcode..."
-        className="w-full px-3 py-2 rounded-lg bg-slate-700 border border-slate-600
-                   text-slate-100 placeholder-slate-400 focus:outline-none
-                   focus:ring-2 focus:ring-blue-500 text-sm"
-      />
+      {/* Mode toggle + search row */}
+      <div className="flex items-center gap-2">
+        {hasShortcuts && (
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 shrink-0">
+            <button
+              onClick={enterBrowseMode}
+              className={clsx(
+                'px-3 py-2 text-xs font-medium flex items-center gap-1.5 transition-colors',
+                viewMode === 'browse'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600',
+              )}
+            >
+              <Search size={12} />
+              Browse
+            </button>
+            <button
+              onClick={enterShortcutsMode}
+              className={clsx(
+                'px-3 py-2 text-xs font-medium flex items-center gap-1.5 transition-colors',
+                viewMode === 'shortcuts'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600',
+              )}
+            >
+              <Zap size={12} />
+              Quick
+            </button>
+          </div>
+        )}
 
-      {/* Category filter */}
-      {categories && categories.length > 0 && (
+        {viewMode === 'browse' && (
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search or scan barcode..."
+            className="flex-1 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600
+                       text-slate-100 placeholder-slate-400 focus:outline-none
+                       focus:ring-2 focus:ring-blue-500 text-sm"
+          />
+        )}
+
+        {viewMode === 'shortcuts' && (
+          <p className="text-xs text-slate-400">Quick-access mode</p>
+        )}
+      </div>
+
+      {/* Shortcuts group tabs */}
+      {viewMode === 'shortcuts' && shortcutGroups && shortcutGroups.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 shrink-0">
+          {shortcutGroups.map((g) => (
+            <button
+              key={g.id}
+              onClick={() => setSelectedGroup(g.id)}
+              className={clsx(
+                'shrink-0 px-4 py-2 rounded-xl text-xs font-semibold transition-colors border',
+                selectedGroup === g.id
+                  ? 'border-transparent text-white'
+                  : 'border-slate-600 bg-slate-700 text-slate-300 hover:bg-slate-600',
+              )}
+              style={selectedGroup === g.id
+                ? { backgroundColor: g.colorHex ?? '#3b82f6' }
+                : undefined}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Category filter (browse mode only) */}
+      {viewMode === 'browse' && categories && categories.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 shrink-0">
           <CategoryChip
             label="All"
@@ -83,7 +180,12 @@ export function ProductGrid() {
       )}
 
       {/* Product grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 overflow-y-auto">
+      <div className={clsx(
+        'overflow-y-auto',
+        viewMode === 'shortcuts'
+          ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2'
+          : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2',
+      )}>
         {filtered.map((product) => (
           <ProductCard
             key={product.id}
@@ -94,7 +196,11 @@ export function ProductGrid() {
 
         {filtered.length === 0 && (
           <div className="col-span-full text-center py-12 text-slate-500 text-sm">
-            {search ? 'No products match your search.' : 'No products available.'}
+            {viewMode === 'shortcuts' && !selectedGroup
+              ? 'Select a group above.'
+              : search
+              ? 'No products match your search.'
+              : 'No products available.'}
           </div>
         )}
       </div>

@@ -19,6 +19,8 @@ import {
   db,
   PendingOrder,
   LocalProduct,
+  LocalShortcutGroup,
+  LocalShortcutGroupItem,
   getSyncCursor,
   setSyncCursor,
   setLastSyncTime,
@@ -162,17 +164,72 @@ function buildOrderPayload(order: PendingOrder) {
   };
 }
 
+// ── Shortcut group sync ───────────────────────────────────────────────────
+
+export async function syncShortcutGroups(): Promise<{ synced: number }> {
+  try {
+    const response = await apiClient.get('/shortcut-groups');
+    const groups = (response.data.data ?? response.data) as Array<{
+      id: string;
+      tenantId: string;
+      name: string;
+      colorHex: string | null;
+      sortOrder: number;
+      items: Array<{
+        id: string;
+        tenantId: string;
+        shortcutGroupId: string;
+        productId: string;
+        sortOrder: number;
+      }>;
+    }>;
+
+    const localGroups: LocalShortcutGroup[] = groups.map((g) => ({
+      id: g.id,
+      tenantId: g.tenantId,
+      name: g.name,
+      colorHex: g.colorHex,
+      sortOrder: g.sortOrder,
+    }));
+
+    const localItems: LocalShortcutGroupItem[] = groups.flatMap((g) =>
+      g.items.map((item) => ({
+        id: item.id,
+        tenantId: item.tenantId,
+        shortcutGroupId: item.shortcutGroupId,
+        productId: item.productId,
+        sortOrder: item.sortOrder,
+      })),
+    );
+
+    // Replace all local data with fresh server data
+    await db.transaction('rw', db.shortcutGroups, db.shortcutGroupItems, async () => {
+      await db.shortcutGroups.clear();
+      await db.shortcutGroupItems.clear();
+      if (localGroups.length) await db.shortcutGroups.bulkPut(localGroups);
+      if (localItems.length) await db.shortcutGroupItems.bulkPut(localItems);
+    });
+
+    return { synced: localGroups.length };
+  } catch (err) {
+    console.warn('[sync] Shortcut group sync failed (offline?)', err);
+    return { synced: 0 };
+  }
+}
+
 // ── Full sync ─────────────────────────────────────────────────────────────
 
 export async function runFullSync() {
-  const [productResult, orderResult] = await Promise.allSettled([
+  const [productResult, orderResult, shortcutResult] = await Promise.allSettled([
     syncProducts(),
     syncPendingOrders(),
+    syncShortcutGroups(),
   ]);
 
   return {
     products: productResult.status === 'fulfilled' ? productResult.value : { synced: 0 },
     orders: orderResult.status === 'fulfilled' ? orderResult.value : { submitted: 0, failed: 0 },
+    shortcuts: shortcutResult.status === 'fulfilled' ? shortcutResult.value : { synced: 0 },
   };
 }
 

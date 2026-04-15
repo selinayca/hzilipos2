@@ -83,11 +83,29 @@ export interface SyncMeta {
   value: string | number | null;
 }
 
+export interface LocalShortcutGroup {
+  id: string;
+  tenantId: string;
+  name: string;
+  colorHex: string | null;
+  sortOrder: number;
+}
+
+export interface LocalShortcutGroupItem {
+  id: string;
+  tenantId: string;
+  shortcutGroupId: string;
+  productId: string;
+  sortOrder: number;
+}
+
 class PosDatabase extends Dexie {
   products!: Table<LocalProduct, string>;
   categories!: Table<LocalCategory, string>;
   pendingOrders!: Table<PendingOrder, number>;
   syncMeta!: Table<SyncMeta, string>;
+  shortcutGroups!: Table<LocalShortcutGroup, string>;
+  shortcutGroupItems!: Table<LocalShortcutGroupItem, string>;
 
   constructor() {
     super('hizlipos');
@@ -97,6 +115,11 @@ class PosDatabase extends Dexie {
       categories:     'id, tenantId, sortOrder',
       pendingOrders:  '++localId, syncId, status, createdAt',
       syncMeta:       'key',
+    });
+
+    this.version(2).stores({
+      shortcutGroups:     'id, tenantId, sortOrder',
+      shortcutGroupItems: 'id, tenantId, shortcutGroupId, productId',
     });
   }
 }

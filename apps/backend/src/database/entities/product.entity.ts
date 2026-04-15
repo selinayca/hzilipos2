@@ -13,6 +13,9 @@ import {
 import { Tenant } from './tenant.entity';
 import { Category } from './category.entity';
 import { Stock } from './stock.entity';
+import { Unit } from './unit.entity';
+import { StockGroup } from './stock-group.entity';
+import { Shelf } from './shelf.entity';
 
 /**
  * Product entity.
@@ -60,6 +63,13 @@ export class Product {
   @Column({ type: 'int' })
   priceCents: number;
 
+  @Column({ type: 'int', nullable: true }) priceCents2: number | null;
+  @Column({ type: 'int', nullable: true }) priceCents3: number | null;
+  @Column({ type: 'int', nullable: true }) priceCents4: number | null;
+
+  /** Purchase/cost price in cents */
+  @Column({ type: 'int', nullable: true }) purchasePriceCents: number | null;
+
   @Column({ type: 'int', default: 0 })
   taxRateBps: number; // tax rate in basis points, e.g. 1800 = 18%
 
@@ -74,6 +84,21 @@ export class Product {
 
   @Column({ type: 'int', default: 0 })
   sortOrder: number;
+
+  // ── Extended attributes ────────────────────────────────────────────────
+  @Column({ type: 'uuid', nullable: true }) unitId: string | null;
+  @Column({ type: 'uuid', nullable: true }) stockGroupId: string | null;
+  @Column({ type: 'uuid', nullable: true }) shelfId: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true }) manufacturerName: string | null;
+
+  /** Additional/alias barcodes for the same product */
+  @Column({ type: 'jsonb', default: [] }) extraBarcodes: string[];
+
+  @Column({ type: 'varchar', length: 255, nullable: true }) customField1: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true }) customField2: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true }) customField3: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true }) customField4: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true }) customField5: string | null;
 
   /**
    * Incremented on every update — POS clients use this as a
@@ -105,4 +130,16 @@ export class Product {
 
   @OneToOne(() => Stock, (s) => s.product, { cascade: ['insert'] })
   stock: Stock;
+
+  @ManyToOne(() => Unit, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'unit_id' })
+  unit: Unit | null;
+
+  @ManyToOne(() => StockGroup, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'stock_group_id' })
+  stockGroup: StockGroup | null;
+
+  @ManyToOne(() => Shelf, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'shelf_id' })
+  shelf: Shelf | null;
 }
