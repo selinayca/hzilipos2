@@ -1,0 +1,9 @@
+import { IsString, IsBoolean, IsOptional, IsInt, Length } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+export class CreateWarehouseDto {
+  @ApiProperty() @IsString() @Length(1, 50) code: string;
+  @ApiProperty() @IsString() @Length(1, 100) name: string;
+  @ApiPropertyOptional() @IsString() @IsOptional() address?: string;
+  @ApiPropertyOptional() @IsBoolean() @IsOptional() isActive?: boolean;
+  @ApiPropertyOptional() @IsInt() @IsOptional() sortOrder?: number;
+}
